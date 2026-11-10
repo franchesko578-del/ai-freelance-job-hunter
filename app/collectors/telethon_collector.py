@@ -1,5 +1,6 @@
 from telethon import TelegramClient
-from config import TELEGRAM_API_ID, TELEGRAM_API_HASH, TELETHON_SESSION
+from telethon.sessions import StringSession
+from config import TELEGRAM_API_ID, TELEGRAM_API_HASH, TELETHON_SESSION, TELETHON_SESSION_STRING
 from app.db import list_sources
 
 async def collect_telegram_user():
@@ -9,7 +10,8 @@ async def collect_telegram_user():
         api_id = int(TELEGRAM_API_ID)
     except ValueError:
         return []
-    client = TelegramClient(TELETHON_SESSION, api_id, TELEGRAM_API_HASH)
+    session = StringSession(TELETHON_SESSION_STRING) if TELETHON_SESSION_STRING else TELETHON_SESSION
+    client = TelegramClient(session, api_id, TELEGRAM_API_HASH)
     results = []
     try:
         await client.connect()
