@@ -1,65 +1,38 @@
 # AI Freelance Job Hunter
 
-Telegram bot project for collecting programming job posts and notifying only the configured admin.
+Dasturlash bo'yicha freelance buyurtmalarni (Telegram, RSS, veb-sayt) topib, faqat adminlarga yuboradigan Telegram bot.
 
-## Features
-- Aiogram admin panel
-- Telethon personal-account collector for configured Telegram channels
-- Bot API channel_post ingestion when the bot is an administrator in the source channel
-- RSS and public HTML page collectors
-- AI classification through OpenRouter or Gemini, with rule-based fallback
-- Excludes resumes, courses, unrelated roles and uncertain posts
-- Missing budget/deadline does not disqualify a programming job
-- Duplicate prevention
-- Personal developer skills profile
-- 15-minute scheduled scanning (configurable)
-- Encrypted AI API key storage from the admin panel
+## Imkoniyatlar
+- Aiogram 3 admin panel; faqat `ADMIN_IDS` ishlata oladi
+- Telethon (shaxsiy akkaunt) orqali kanal/guruhlarni o'qish; `TELETHON_SESSION_STRING` bo'lsa StringSession
+- RSS va ochiq HTML sahifalar
+- AI (OpenRouter/Gemini) + qoida filtri (fallback). Rezyume, kurs va aloqasiz postlar rad etiladi
+- Takroriy postlar: `UNIQUE(source, external_id)` + ko'rilgan (rad etilgan) postlar jadvali + bir xil matn tekshiruvi
+- **Har tekshiruvdan keyin to'liq hisobot**: nechta xabar o'qildi, nechtasi takroriy, nechtasi rad etildi (sabab bilan), AI/collector xatolari
+- Xatolar yashirilmaydi: Telegram sessiya, manba, RSS, web va AI xatolari admin'ga tushunarli ko'rsatiladi
 
-## Important limitations
-This cannot monitor literally every website or Telegram channel. Add sources that you are authorized to access. Telethon can read only channels/groups your account can access. Bot API only receives channel posts when the bot is added with appropriate rights. Some sites prohibit scraping or require APIs; use their official API/RSS and terms. Bot API channel_post ingestion works only for channels where the bot is added with appropriate administrator permissions. Do not treat this as a finished production service until tested with your real sources.
+## Bot buyruqlari
+`/start` `/admin` — panel · `/scan` — hozir tekshirish · `/report` — oxirgi hisobot · `/account` — Telegram akkaunt, manbalar, AI va baza holati · `/sources` · `/rejected` — rad etilganlar va sabablari · `/cancel`
 
-## Termux setup
+Manba formatlari: `telegram @kanal` (yoki `https://t.me/kanal`, `-100...` ID) · `rss https://...` · `website https://...`
+
+## Termux
 ```bash
-pkg update -y && pkg upgrade -y
-pkg install python git nano -y
-unzip ai-freelance-job-hunter.zip
-cd ai-freelance-job-hunter
-python -m venv .venv
-source .venv/bin/activate
+pkg update -y && pkg upgrade -y && pkg install python git nano -y
+python -m venv .venv && source .venv/bin/activate
 pip install -r requirements.txt
-cp .env.example .env
-nano .env
+cp .env.example .env && nano .env
+python connect_telegram.py      # akkauntni bir marta ulash
+python -m unittest discover -s tests -t . -v
 ```
+**Muhim:** Render'dagi bot ishlab turganda Termux'da `python main.py` ni ishga tushirmang — bir xil `BOT_TOKEN` bilan ikkita polling `TelegramConflictError` beradi. Bir xil Telethon sessiyasini ham ikki joyda bir vaqtda ishlatmang (`AuthKeyDuplicatedError`): Render uchun alohida session yarating.
 
-Set BOT_TOKEN, ADMIN_IDS (numeric Telegram ID), TELEGRAM_API_ID and TELEGRAM_API_HASH. Generate ENCRYPTION_KEY:
-```bash
-python -c "from cryptography.fernet import Fernet; print(Fernet.generate_key().decode())"
-```
-Put its output into `.env`. AI_PROVIDER can be `openrouter`, `gemini`, or `none`. Set AI_API_KEY and optional AI_MODEL. Never commit `.env` or `*.session`.
+## Render
+- Start command: `python main.py`; faqat **1 ta instance**.
+- Env: `.env.example` dagi o'zgaruvchilar. `PYTHONUNBUFFERED=1` qo'shsangiz yaxshi.
+- **Free** web service: 15 daqiqa trafiksiz qolsa uxlaydi va lokal fayllar (SQLite) restart/deployda o'chadi. Persistent disk faqat pullik rejada.
+- Pullik rejada: Disks → Add Disk (mount `/var/data`) → `DATABASE_PATH=/var/data/jobs.db`.
+- Free rejada: `SEED_SOURCES` bilan manbalarni qayta tiklang, AI kalitni `AI_API_KEY` env'da saqlang, uxlab qolmasligi uchun tashqi ping (masalan UptimeRobot) ishlating.
 
-## Connect personal Telegram account
-Run `python connect_telegram.py` in Termux. Enter login code/2FA in the terminal. The session file is sensitive and must never be shared or pushed to GitHub.
-
-## Run
-```bash
-python main.py
-```
-Open the bot and use `/start`. Add sources in the admin menu using:
-- `telegram @channelusername`
-- `rss https://example.com/feed.xml`
-- `website https://example.com/jobs`
-
-## GitHub
-```bash
-git init
-git add .
-git status
-git commit -m "Initial project"
-git branch -M main
-git remote add origin https://github.com/YOUR_USERNAME/ai-freelance-job-hunter.git
-git push -u origin main
-```
-Check `git status` and ensure `.env` and session files are not staged before pushing.
-
-## Hosting
-Termux is for development/testing. Android can suspend background processes. For reliable 24/7 operation use a VPS/always-on host with persistent storage for `data/jobs.db` and `data/telethon.session`.
+## Testlar
+`python -m unittest discover -s tests -t . -v`

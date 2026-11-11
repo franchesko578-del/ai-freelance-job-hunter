@@ -11,3 +11,5 @@ logs/
 *.sqlite3
 .env.*
 !.env.example
+export_session.py
+*.backup
