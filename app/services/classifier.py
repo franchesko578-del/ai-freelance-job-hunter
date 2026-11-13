@@ -66,15 +66,12 @@ PROGRAMMING = _compile([
 
 HIRING = _compile([
     _stem("kerak"), _stem("izlayapmiz"), _stem("qidiryapmiz"), _stem("qidirilmoqda"),
-    _stem("buyurtma"), _stem("zakaz"), _stem("loyiha"), _stem("proyekt"), _stem("vakansiya"),
-    _stem("yozib\\s+ber"), _stem("yasab\\s+ber"), _stem("qilib\\s+ber"), _stem("tuzatib\\s+ber"),
-    _stem("тз\\b"), _stem("техзадани"), _stem("заказ"), _stem("нужен"), _stem("нужна"),
-    _stem("нужно"), _stem("нужны"), _stem("требуется"), _stem("требуются"), _stem("ищем"),
-    _stem("в\\s+поиске"), _stem("вакансия"), _stem("создать"), _stem("сделать"),
-    _stem("разработать"), _stem("написать"), _stem("доработать"), _stem("исправить"),
-    _stem("бюджет"), _stem("оплат"), _stem("hiring"), _stem("looking\\s+for"), _stem("need\\b"),
-    _stem("we\\s+need"), _stem("required"), _stem("wanted"), _stem("vacancy"), _stem("build\\b"),
-    _stem("develop\\b"), _stem("budget"), _stem("project"), _stem("fix\\b"),
+    _stem("vakansiya"), _stem("ish\\s+bor"), _stem("ish\\s+haqi"), _stem("oylik"), _stem("maosh"),
+    _stem("нужен"), _stem("нужна"), _stem("нужно"), _stem("нужны"), _stem("требуется"),
+    _stem("требуются"), _stem("ищем"), _stem("в\\s+поиске"), _stem("вакансия"),
+    _stem("зарплат"), _stem("тз\\b"), _stem("техзадани"),
+    _stem("hiring"), _stem("looking\\s+for"), _stem("need\\b"), _stem("we\\s+need"),
+    _stem("required"), _stem("wanted"), _stem("vacancy"),
 ])
 
 RESUME = _compile([
@@ -89,6 +86,19 @@ RESUME = _compile([
     _stem("резюме"), _stem("портфолио"), _stem("принимаю\\s+заказ"), _stem("беру\\s+заказ"),
     _stem("возьму\\s+заказ"), _stem("возьмусь"), _stem("делаю\\s+\\w+"), _stem("оказываю\\s+услуг"),
     _stem("предлагаю\\s+услуг"), _stem("разрабатываем\\s+под\\s+ключ"),
+    _word("olaman"), _word("olamiz"),
+    _word("(?:yasa|tayyorla|dasturla|sozla|ula|yarat)y(?:man|miz)"),
+    _word("(?:qil|yoz|bajar|tuz|yarat)a(?:man|miz)"), _stem("ishlab\\s+chiqa(?:man|miz)"),
+    _stem("xizmat"), _stem("arzon\\s+narx"), _stem("narxlar"),
+    _stem("kerak(?:mi|mas)"), _stem("kerak\\s+bo'lsa"), _stem("sizga\\s+(?:\\w+\\s+){0,3}kerak"),
+    _stem("могу\\s+(?:сделать|создать|разработать|написать|настроить)"),
+    _stem("сделаю"), _stem("напишу"), _stem("разработаю"), _stem("создам"), _stem("разрабатываю"),
+    _stem("пишу\\s+\\w+"), _stem("занимаюсь\\s+разработк"), _stem("под\\s+ключ"), _stem("услуг"),
+    _stem("мы\\s+(?:делаем|разрабатываем|создаем|создаём|пишем)"),
+    _stem("вам\\s+(?:\\w+\\s+){0,3}нужен"), _stem("если\\s+вам\\s+нужн"),
+    _stem("i\\s+(?:can|will)\\s+\\w+"), _stem("we\\s+(?:build|develop|create|make|offer)"),
+    _stem("my\\s+services"), _stem("dm\\s+me"), _stem("contact\\s+me"), _stem("for\\s+hire"),
+    _stem("do\\s+you\\s+need"),
     _stem("looking\\s+for\\s+(?:a\\s+)?(?:work|job|clients|projects|gigs|opportunit)"),
     _stem("available\\s+for\\s+hire"), _stem("open\\s+to\\s+work"), _stem("hire\\s+me"),
     _stem("i\\s+am\\s+a\\s+(?:freelance\\s+)?developer"), _stem("i\\s+can\\s+(?:build|develop|make)"),
@@ -261,6 +271,11 @@ def build_prompt(text: str, profile: str) -> str:
         "confidence(0..1), match_score(0..100), title, language, reason (short Uzbek), task_summary (short Uzbek). "
         "Only relevant=true if a client/employer requests software development or code work. "
         "Exclude resumes/self-advertisements, job seekers, courses and unrelated work. "
+        "IMPORTANT: if the AUTHOR OFFERS their own services (e.g. 'bot yasay olaman', 'qilib beraman', 'saytlar yasayman', "
+        "'делаю ботов', 'могу сделать', 'I can build', 'we make websites', prices, portfolio, 'contact me/murojaat qiling', "
+        "or asks customers 'Sizga sayt kerakmi?'), it is a self-advertisement: category=resume, relevant=false, even though it "
+        "mentions bots/programming. relevant=true ONLY when the author is LOOKING FOR a developer to do paid work "
+        "(e.g. 'dasturchi kerak', 'нужен разработчик', 'looking for a developer'). "
         "Missing budget/deadline or DM/negotiable wording must NOT disqualify a real programming job. "
         "Include all languages/stacks, AI, bots, websites, apps, APIs, automation, debugging and databases. "
         "Ambiguous posts must be irrelevant and category uncertain. "

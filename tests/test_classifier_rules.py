@@ -53,3 +53,33 @@ class RuleClassifierTests(unittest.TestCase):
 
 if __name__ == "__main__":
     unittest.main()
+
+
+class SellerAdTests(unittest.TestCase):
+    def test_seller_ads_are_rejected(self):
+        ads = [
+            "Telegram bot yasay olaman, narxlar kelishiladi",
+            "Men bot qila olaman, buyurtma bering",
+            "Saytlar yasayman, python django, aloqaga chiqing",
+            "Sizga Telegram bot kerakmi? Tez va sifatli qilib beraman",
+            "Sizga sayt kerak bo'lsa murojaat qiling, dasturchi xizmati",
+            "Делаю телеграм ботов на python, пишите в лс",
+            "Могу сделать сайт под ключ, услуги разработчика",
+            "Вам нужен бот? Разрабатываем боты и сайты",
+            "I can build Telegram bots in Python, contact me",
+            "We make websites and apps, my services: React, API",
+        ]
+        for text in ads:
+            self.assertFalse(rule_classify(text)["relevant"], text)
+
+    def test_real_jobs_still_accepted(self):
+        jobs = [
+            "Telegram bot yozadigan dasturchi kerak, to'lov kelishiladi",
+            "Python backend dasturchi izlayapmiz, oylik 800$",
+            "Нужен разработчик для Telegram бота, бюджет 300$",
+            "Требуется программист на PHP для доработки сайта",
+            "Looking for a React developer to build a web app",
+            "Sayt yasab beradigan dasturchi kerak",
+        ]
+        for text in jobs:
+            self.assertTrue(rule_classify(text)["relevant"], text)

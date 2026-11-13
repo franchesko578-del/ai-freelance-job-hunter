@@ -4,6 +4,7 @@ import os
 import signal
 from datetime import datetime, timedelta, timezone
 
+import aiohttp
 from aiogram import Bot, Dispatcher
 from aiogram.fsm.storage.memory import MemoryStorage
 from apscheduler.schedulers.asyncio import AsyncIOScheduler
@@ -84,6 +85,26 @@ async def run_polling(dp: Dispatcher, bot: Bot, stop: asyncio.Event):
             delay = min(delay * 2, 60)
 
 
+async def keepalive_loop(stop: asyncio.Event):
+    """Render Free 15 daqiqa trafiksiz qolsa uxlaydi va skaner to'xtaydi.
+    O'z jamoat URL'imizga har 10 daqiqada so'rov yuborib, uyg'oq turishga urinadi."""
+    url = config.RENDER_EXTERNAL_URL
+    if not (config.KEEPALIVE and url):
+        return
+    log.info("Keepalive yoqildi: %s", url)
+    async with aiohttp.ClientSession(timeout=aiohttp.ClientTimeout(total=20)) as session:
+        while not stop.is_set():
+            try:
+                async with session.get(url) as resp:
+                    await resp.read()
+            except Exception as exc:
+                log.warning("Keepalive xatosi: %s", type(exc).__name__)
+            try:
+                await asyncio.wait_for(stop.wait(), timeout=600)
+            except asyncio.TimeoutError:
+                pass
+
+
 async def main():
     setup_logging()
     if not config.BOT_TOKEN:
@@ -142,6 +163,7 @@ async def main():
 
     polling_task = asyncio.create_task(run_polling(dp, bot, stop), name="polling")
     stop_task = asyncio.create_task(stop.wait(), name="stop")
+    keepalive_task = asyncio.create_task(keepalive_loop(stop), name="keepalive")
     try:
         async with server:
             done, _pending = await asyncio.wait({polling_task, stop_task}, return_when=asyncio.FIRST_COMPLETED)
@@ -157,6 +179,7 @@ async def main():
             pass
         polling_task.cancel()
         stop_task.cancel()
+        keepalive_task.cancel()
         scheduler.shutdown(wait=False)
         await manager.close()
         await bot.session.close()

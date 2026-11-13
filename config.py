@@ -55,4 +55,6 @@ NOTIFY_ON_START = os.getenv("NOTIFY_ON_START", "1").strip() != "0"
 # Masalan: SEED_SOURCES="telegram @freelancer_Uzbek;rss https://site/feed.xml"
 SEED_SOURCES = os.getenv("SEED_SOURCES", "").strip()
 
+KEEPALIVE = os.getenv("KEEPALIVE", "1").strip() != "0"
+RENDER_EXTERNAL_URL = os.getenv("RENDER_EXTERNAL_URL", "").strip()
 ON_RENDER = os.getenv("RENDER", "").strip().lower() == "true"
